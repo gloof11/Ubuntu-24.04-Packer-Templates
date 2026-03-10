@@ -7,11 +7,11 @@ packer {
   }
 }
 
-variable "password" {
+variable "username" {
   type    = string
 }
 
-variable "username" {
+variable "password" {
   type    = string
 }
 
@@ -23,65 +23,129 @@ variable "port" {
   type    = string
 }
 
+variable "vm_name" {
+  type = string
+  default = "ubuntu-24.04-template" 
+}
+
+variable template_description {
+  type = string
+  default = ""
+}
+
+variable insecure_skip_tls_verify {
+  type = bool
+  default = true
+}
+
+variable cpu_type {
+  type = string
+  default = "host"
+}
+
+variable cores {
+  type = string
+  default = "2"
+}
+
+variable os {
+  type = string
+  default = "l26"
+}
+
+variable memory {
+  type = string
+  default = "2048"
+}
+
+variable disk_size {
+  type = string
+  default = "16G"
+}
+
+variable disk_storage_pool {
+  type = string
+}
+
+variable network_adapter_model {
+  type = string
+  default = "virtio"
+}
+
+variable network_adapter_bridge {
+  type = string
+  default = "vmbr0"
+}
+
+variable network_adapter_firewall {
+  type = string
+  default = "false"
+}
+
+variable iso_file {
+  type = string
+}
+
+variable iso_checksum {
+  type = string
+}
+
+variable ssh_username {
+  type = string
+}
+
+variable ssh_private_key_file_path {
+  type = string
+}
+
+variable ssh_timeout {
+  type = string
+  default = "15m"
+}
+
 source "proxmox-iso" "ubuntu-server" {
-  # Proxmox Connection Settings
   proxmox_url = "https://${var.node}:${var.port}/api2/json"
   username = "${var.username}"
   password = "${var.password}"
-  insecure_skip_tls_verify = true
+  insecure_skip_tls_verify = ${var.insecure_skip_tls_verify}
   
-  # VM Settings
   node = "${var.node}"
-  vm_name = "ubuntu-24.04-template" # Set your Template Name. Default: ubuntu-24.04-template
-  template_description = "" # Set your Template Description
-  cpu_type = "host"
-  cores = "2" # Set the amount of cores you want the template to have. Default: 2
-  os = "l26"
-  memory = "2048" # Set the the amount of RAM you want the template to have. Default: 2GB
+  vm_name = "${var.vm_name}" 
+  template_description = "${var.template_description}"
+  cpu_type = "${cpu_type}"
+  cores = "${cores}"
+  os = "${l26}"
+  memory = "${memory}"
   qemu_agent = true
   scsi_controller = "virtio-scsi-pci"
   
-  # Disk settings
   disks {
-    disk_size = "16G" # Set the amount of disk space you want the template to have. Default: 16GB
-    
-    # Set this to the storage pool you are using.
-    # This will vary if you are using ZFS, LVM etc
-    # For example:
-    # storage_pool = "local-zfs"
-    storage_pool = ""
+    disk_size = "${disk_size}"
+    storage_pool = "${disk_storage_pool}"
   }
 
-  # Network Settings
   network_adapters {
-    model = "virtio"
-    bridge = "vmbr0"
-    firewall = "false"
+    model = "${network_adapter_model}"
+    bridge = "${network_adapter_bridge}"
+    firewall = "${network_adapter_firewall}"
   }
 
-  # VM OS Settings
   boot_iso {
     type = "scsi"
     unmount = true
-
-    # The iso must be uploaded to the Proxmox Node
-    # You must also have the checksum for the iso file
-    # For example: 
-    # iso_file = "local:iso/ubuntu-24.04.3-live-server-amd64.iso"
-    # iso_checksum = "sha256:c3514bf0056180d09376462a7a1b4f213c1d6e8ea67fae5c25099c6fd3d8274b"
-    iso_file = "" 
-    iso_checksum = ""
+    iso_file = "${var.iso_file}" 
+    iso_checksum = "${var.iso_checksum}"
   }
   
-  # Cloud-Init Settings
   cloud_init = true
 
-  # Set this to the storage pool you are using.
-  # This will vary if you are using ZFS, LVM etc
-  # For example:
-  # storage_pool = "local-zfs"
-  cloud_init_storage_pool = ""
+  cloud_init_storage_pool = "${disk_storage_pool}"
   
+  ssh_username = "${var.ssh_username}"
+  ssh_private_key_file = "${var.ssh_private_key_file_path}"
+
+  ssh_timeout = "${var.ssh_timeout}"
+
   # Boot Commands
   boot = "c"
   boot_wait = "10s"
@@ -96,11 +160,6 @@ source "proxmox-iso" "ubuntu-server" {
     "<f10><wait>"
   ]
 
-  # SSH Settings
-  ssh_username = ""
-  ssh_private_key_file = "" # Path to the key file that you would like to use
-
-  ssh_timeout = "15m"
 }
 
 build {
